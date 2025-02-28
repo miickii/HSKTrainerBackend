@@ -74,10 +74,6 @@ processor = WhisperProcessor.from_pretrained("openai/whisper-medium")
 
 # Determine device - use MPS for Mac with Apple Silicon, CUDA for Nvidia GPU, or CPU
 device = "cpu"
-if torch.backends.mps.is_available():
-    device = "mps"
-elif torch.cuda.is_available():
-    device = "cuda"
 
 print(f"Using device: {device}")
 
