@@ -2,8 +2,6 @@ fastapi
 sqlalchemy
 uvicorn
 numpy
-torch==2.2.0
 python-multipart
 openai
 hanziconv
-transformers
