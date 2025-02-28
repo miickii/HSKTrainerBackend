@@ -11,15 +11,13 @@ import random
 import numpy as np
 import wave
 import uvicorn
-import torch
-import opencc
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
-from transformers import WhisperProcessor, WhisperForConditionalGeneration, WhisperTokenizer
 from hsk import HSKManager  # Assumes your hsk.py defines HSKManager
+from hanziconv import HanziConv
 
 import sys
 
@@ -65,20 +63,8 @@ class VocabularyFilter(BaseModel):
 # =============== Setup ===============
 
 # Setup Chinese traditional to simplified converter
-converter = opencc.OpenCC('t2s')
+#converter = opencc.OpenCC('t2s')
 
-# Initialize Whisper model for transcription
-tokenizer = WhisperTokenizer.from_pretrained("openai/whisper-medium", language="chinese", task="transcribe")
-forced_decoder_ids = tokenizer.get_decoder_prompt_ids(language="chinese", task="transcribe")
-processor = WhisperProcessor.from_pretrained("openai/whisper-medium")
-
-# Determine device - use MPS for Mac with Apple Silicon, CUDA for Nvidia GPU, or CPU
-device = "cpu"
-
-print(f"Using device: {device}")
-
-# Load the model on the appropriate device
-model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-medium").to(device)
 
 # Initialize HSK Manager
 manager = HSKManager()
@@ -170,39 +156,7 @@ def save_audio_to_bytes(samples):
     byte_io.seek(0)
     return byte_io
 
-def transcribe_audio_local(audio_samples):
-    """Transcribe audio using local Whisper model."""
-    try:
-        audio_array = np.array(audio_samples, dtype=np.float32)
-        inputs = processor(audio_array, sampling_rate=16000, return_tensors="pt")
-
-        # Move input tensors to the same device as the model
-        input_features = inputs.input_features.to(device)
-        if "attention_mask" in inputs:
-            attention_mask = inputs.attention_mask.to(device)
-        else:
-            # Create a mask of ones
-            attention_mask = torch.ones(
-                input_features.shape[:2], dtype=torch.long, device=device
-            )
-
-        # Generate transcription
-        predicted_ids = model.generate(
-            input_features,
-            attention_mask=attention_mask,
-            forced_decoder_ids=forced_decoder_ids
-        )
-
-        # Decode the token ids to text
-        transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
         
-        # Convert to simplified Chinese if needed
-        simplified_text = converter.convert(transcription)
-        return simplified_text
-        
-    except Exception as e:
-        print(f"Error in local transcription: {e}")
-        return None
 
 def transcribe_audio_openai(audio_file):
     """Transcribe audio using OpenAI's Whisper API."""
@@ -215,37 +169,23 @@ def transcribe_audio_openai(audio_file):
             file=audio_file,
             language="zh"
         )
-        simplified_text = converter.convert(transcription.text)
+        simplified_text = HanziConv.toSimplified(transcription.text)#converter.convert(transcription.text)
         return simplified_text
         
     except Exception as e:
         print(f"Error in OpenAI transcription: {e}")
         return None
 
-def get_transcription(audio_samples, use_local=True):
+def get_transcription(audio_samples):
     """Get transcription from audio samples, with fallback options."""
     audio_file = save_audio_to_bytes(audio_samples)
     audio_file.name = "audio.wav"
-    
-    # First try local transcription if enabled
-    if use_local:
-        result = transcribe_audio_local(audio_samples)
-        if result:
-            return result
     
     # If local fails or is disabled, try OpenAI if available
     if openai_client:
         result = transcribe_audio_openai(audio_file)
         if result:
             return result
-    
-    # If all transcription methods fail
-    if use_local:
-        # Return error message
-        raise Exception("Transcription failed with all available methods")
-    else:
-        # Fall back to local as last resort
-        return transcribe_audio_local(audio_samples)
 
 def process_transcription(transcription, sampled_words):
     result = manager.update_words(transcription, sampled_words)
@@ -535,7 +475,7 @@ async def transcribe(request: Request):
                 file=audio_file,
                 language="zh"
             )
-            simplified_text = converter.convert(transcription.text)
+            simplified_text = HanziConv.toSimplified(transcription.text)#converter.convert(transcription.text)
             
             return {"transcription": simplified_text}
         else:
