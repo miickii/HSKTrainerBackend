@@ -71,7 +71,7 @@ manager = HSKManager()
 
 # Configure CORS for frontend
 origins = [
-    "https://miickii.github.io/HSKTrainer/",
+    "https://miickii.github.io",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://192.168.1.*",  # Allow local network access for mobile testing
