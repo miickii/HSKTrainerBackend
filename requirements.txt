@@ -1,7 +1,8 @@
 fastapi
 sqlalchemy
-uvicorn
 numpy
 python-multipart
 openai
 hanziconv
+uvicorn[standard]==0.23.2
+websockets==11.0.3
