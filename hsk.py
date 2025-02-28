@@ -29,7 +29,11 @@ class ChineseWord(Base):
     is_favorite = Column(Boolean, default=False)
 
 class HSKManager:
-    def __init__(self, db_path="files/hsk.db"):
+    def __init__(self, db_path=None):
+        # Use the DB_PATH from main.py if not specified
+        if db_path is None:
+            db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files', 'hsk.db')
+        
         # Create directory for the database if it doesn't exist
         os.makedirs(os.path.dirname(db_path) if os.path.dirname(db_path) else '.', exist_ok=True)
         

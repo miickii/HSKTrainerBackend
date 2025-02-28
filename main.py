@@ -21,6 +21,14 @@ from pydantic import BaseModel
 from transformers import WhisperProcessor, WhisperForConditionalGeneration, WhisperTokenizer
 from hsk import HSKManager  # Assumes your hsk.py defines HSKManager
 
+import sys
+
+# Add the current directory to Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Modify database path for Vercel
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files', 'hsk.db')
+
 # Initialize FastAPI app
 app = FastAPI(
     title="HSK Master API",

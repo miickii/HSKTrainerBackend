@@ -2,9 +2,9 @@ fastapi
 sqlalchemy
 uvicorn
 numpy
-torch
-opencc-python-sweetheart
-transformers
-wave
+torch==2.0.1
 python-multipart
 openai
+opencc-python
+transformers
+wave
