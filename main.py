@@ -81,10 +81,10 @@ manager = HSKManager()
 
 # Configure CORS for frontend
 origins = [
+    "https://miickii.github.io/HSKTrainer/",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://192.168.1.*",  # Allow local network access for mobile testing
-    "*"  # During development. Restrict this in production!
 ]
 
 app.add_middleware(
@@ -716,8 +716,3 @@ async def serve_spa(full_path: str):
         "documentation": "/docs",
         "status": "ok"
     }
-
-# =============== Main Entry Point ===============
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)

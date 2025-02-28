@@ -1,0 +1,10 @@
+fastapi
+sqlalchemy
+uvicorn
+numpy
+torch
+opencc-python-sweetheart
+transformers
+wave
+python-multipart
+openai
