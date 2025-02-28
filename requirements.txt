@@ -5,5 +5,5 @@ numpy
 torch==2.2.0
 python-multipart
 openai
-opencc-python
+hanziconv
 transformers
